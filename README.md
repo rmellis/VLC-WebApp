@@ -1,4 +1,4 @@
-# 🚦 VLC WebApp Clone
+# <img width="42" alt="VLC Icon" src="https://github.com/user-attachments/assets/d62e0457-5a34-43fd-8535-b69fa4ff0dd7" /> VLC WebApp Clone
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
