@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>VLC Clone -Functional [standerd browser codecs]</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLC media player</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="vlc-window">
+        
+        <div class="menu-bar">
+            <div class="menu-item">Media
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="document.getElementById('media-input').click()">
+                        <div class="dropdown-item-text"><i class="ph-fill ph-file-video" style="color: #ff8800; font-size: 1rem;"></i> Open File...</div>
+                        <span class="dropdown-shortcut">Ctrl+O</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph-fill ph-files" style="color: #ff8800; font-size: 1rem;"></i> Open Multiple Files...</div>
+                        <span class="dropdown-shortcut">Ctrl+Shift+O</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph-fill ph-folder-open" style="color: #ff8800; font-size: 1rem;"></i> Open Folder...</div>
+                        <span class="dropdown-shortcut">Ctrl+F</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph-fill ph-disc" style="color: #ffaa00; font-size: 1rem;"></i> Open Disc...</div>
+                        <span class="dropdown-shortcut">Ctrl+D</span>
+                    </div>
+                    <div class="dropdown-item" onclick="window.promptNetworkStream()">
+                        <div class="dropdown-item-text"><i class="ph-bold ph-git-network" style="color: #ff8800; font-size: 1rem;"></i> Open Network Stream...</div>
+                        <span class="dropdown-shortcut">Ctrl+N</span>
+                    </div>
+                    <div class="dropdown-item" onclick="window.openCaptureDevice()">
+                        <div class="dropdown-item-text"><i class="ph-bold ph-webcam" style="color: #ff8800; font-size: 1rem;"></i> Open Capture Device...</div>
+                        <span class="dropdown-shortcut">Ctrl+C</span>
+                    </div>
+                    <div class="dropdown-item" onclick="window.promptNetworkStream()">
+                        <div class="dropdown-item-text"><span class="empty-icon-space"></span> Open Location from clipboard</div>
+                        <span class="dropdown-shortcut">Ctrl+V</span>
+                    </div>
+                    <div class="dropdown-item nested-dropdown-parent disabled">
+                        <div class="dropdown-item-text"><span class="empty-icon-space"></span> Open Recent Media</div>
+                        <i class="ph ph-caret-right"></i>
+                        <div class="nested-dropdown">
+                            <div class="dropdown-item disabled">Clear menu</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="logSystem('Playlist saved to cache.');">
+                        <div class="dropdown-item-text"><span class="empty-icon-space"></span> Save Playlist to File...</div>
+                        <span class="dropdown-shortcut">Ctrl+Y</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><span class="empty-icon-space"></span> Convert / Save...</div>
+                        <span class="dropdown-shortcut">Ctrl+R</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph-bold ph-broadcast" style="color: #666; font-size: 1rem;"></i> Stream...</div>
+                        <span class="dropdown-shortcut">Ctrl+S</span>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><span class="empty-icon-space"></span> Quit at the end of playlist</div>
+                    </div>
+                    <div class="dropdown-item" onclick="window.close()">
+                        <div class="dropdown-item-text"><i class="ph-bold ph-sign-out" style="color: #666; font-size: 1rem;"></i> Quit</div>
+                        <span class="dropdown-shortcut">Ctrl+Q</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Playback
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="togglePlay()">
+                        <div class="dropdown-item-text"><i class="ph ph-play"></i> Play/Pause</div>
+                        <span class="dropdown-shortcut">Space</span>
+                    </div>
+                    <div class="dropdown-item" onclick="stopTrack()">
+                        <div class="dropdown-item-text"><i class="ph ph-stop"></i> Stop</div>
+                        <span class="dropdown-shortcut">S</span>
+                    </div>
+                    <div class="dropdown-item" onclick="prevTrack()">
+                        <div class="dropdown-item-text"><i class="ph ph-skip-back"></i> Previous</div>
+                        <span class="dropdown-shortcut">P</span>
+                    </div>
+                    <div class="dropdown-item" onclick="nextTrack()">
+                        <div class="dropdown-item-text"><i class="ph ph-skip-forward"></i> Next</div>
+                        <span class="dropdown-shortcut">N</span>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    
+                    <div class="dropdown-item nested-dropdown-parent">
+                        <div class="dropdown-item-text"><i class="ph ph-gauge"></i> Speed</div>
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span class="dropdown-shortcut">[ ]</span>
+                            <i class="ph ph-caret-right"></i>
+                        </span>
+                        <div class="nested-dropdown">
+                            <div class="dropdown-item" onclick="window.setPlaybackSpeed(0.5)">0.5x Slower</div>
+                            <div class="dropdown-item" onclick="window.setPlaybackSpeed(1.0)">1.0x Normal</div>
+                            <div class="dropdown-item" onclick="window.setPlaybackSpeed(1.5)">1.5x Faster</div>
+                            <div class="dropdown-item" onclick="window.setPlaybackSpeed(2.0)">2.0x Fast</div>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-fast-forward"></i> Jump Forward</div>
+                        <span class="dropdown-shortcut">Alt+Right</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-rewind"></i> Jump Backward</div>
+                        <span class="dropdown-shortcut">Alt+Left</span>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="startRecording()">
+                        <div class="dropdown-item-text"><i class="ph ph-record"></i> Record</div>
+                        <span class="dropdown-shortcut">Shift+R</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Audio
+                <div class="dropdown">
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-waveform"></i> Audio Track</div>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-speaker-hifi"></i> Audio Device</div>
+                    </div>
+                    <div class="dropdown-item" onclick="toggleSpatialAudio()" id="menu-spatial">
+                        <div class="dropdown-item-text"><i class="ph ph-headphones"></i> Toggle 3D Spatial Audio</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="toggleMute()">
+                        <div class="dropdown-item-text"><i class="ph ph-speaker-slash"></i> Mute</div>
+                        <span class="dropdown-shortcut">M</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Video
+                <div class="dropdown">
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-film-strip"></i> Video Track</div>
+                    </div>
+                    <div class="dropdown-item" onclick="toggleFullscreen()">
+                        <div class="dropdown-item-text"><i class="ph ph-corners-out"></i> Fullscreen</div>
+                        <span class="dropdown-shortcut">F</span>
+                    </div>
+                    <div class="dropdown-item" onclick="togglePiP()">
+                        <div class="dropdown-item-text"><i class="ph ph-picture-in-picture"></i> Picture-in-Picture</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    
+                    <div class="dropdown-item nested-dropdown-parent" id="aspect-ratio-parent">
+                        <div class="dropdown-item-text"><i class="ph ph-aspect-ratio"></i> Aspect Ratio</div>
+                        <span style="display: flex; align-items: center; gap: 8px;">
+                            <span class="dropdown-shortcut">A</span>
+                            <i class="ph ph-caret-right"></i>
+                        </span>
+                        <div class="nested-dropdown" id="aspect-ratio-list">
+                            <div class="dropdown-item active-state" onclick="window.setAspectRatio('default')">Default</div>
+                            <div class="dropdown-item" onclick="window.setAspectRatio('16:9')">16:9</div>
+                            <div class="dropdown-item" onclick="window.setAspectRatio('16:10')">16:10</div>
+                            <div class="dropdown-item" onclick="window.setAspectRatio('4:3')">4:3</div>
+                            <div class="dropdown-item" onclick="window.setAspectRatio('1:1')">1:1</div>
+                            <div class="dropdown-item" onclick="window.setAspectRatio('2.35:1')">2.35:1</div>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-crop"></i> Crop</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="document.getElementById('art-input').click()">
+                        <div class="dropdown-item-text"><i class="ph ph-image"></i> Custom Album Cover...</div>
+                    </div>
+                    <div class="dropdown-item" onclick="cycleArtFilter()">
+                        <div class="dropdown-item-text"><i class="ph ph-magic-wand"></i> Cycle Video FX Preset</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="window.takeSnapshot()">
+                        <div class="dropdown-item-text"><i class="ph ph-camera"></i> Take Snapshot</div>
+                        <span class="dropdown-shortcut">Shift+S</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Subtitle
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="document.getElementById('sub-input').click()">
+                        <div class="dropdown-item-text"><i class="ph ph-file-text"></i> Add Subtitle File...</div>
+                    </div>
+                    <div class="dropdown-item nested-dropdown-parent disabled" id="sub-track-parent">
+                        <div class="dropdown-item-text"><i class="ph ph-subtitles"></i> Subtitle Track</div>
+                        <i class="ph ph-caret-right"></i>
+                        <div class="nested-dropdown" id="sub-track-list">
+                            <div class="dropdown-item active-state" onclick="setSubtitleTrack(-1)">Disable</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Tools
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="openDialog('eq-dialog')">
+                        <div class="dropdown-item-text"><i class="ph ph-faders"></i> Effects and Filters</div>
+                        <span class="dropdown-shortcut">Ctrl+E</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-clock-counter-clockwise"></i> Track Synchronization</div>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-info"></i> Media Information</div>
+                        <span class="dropdown-shortcut">Ctrl+I</span>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="toggleAdvancedControls()">
+                        <div class="dropdown-item-text"><i class="ph ph-sliders"></i> Advanced Controls</div>
+                    </div>
+                    <div class="dropdown-item" onclick="toggleVoice()">
+                        <div class="dropdown-item-text"><i class="ph ph-microphone"></i> Voice Control</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="openDialog('theme-dialog')">
+                        <div class="dropdown-item-text"><i class="ph ph-gear"></i> Preferences</div>
+                        <span class="dropdown-shortcut">Ctrl+P</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">View
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="togglePlaylist()">
+                        <div class="dropdown-item-text"><i class="ph ph-list"></i> Playlist</div>
+                        <span class="dropdown-shortcut">Ctrl+L</span>
+                    </div>
+                    <div class="dropdown-item" onclick="openDialog('rec-dialog')">
+                        <div class="dropdown-item-text"><i class="ph ph-files"></i> Recorded Files</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="toggleStatusBar()">
+                        <div class="dropdown-item-text"><i class="ph ph-info"></i> Status Bar</div>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-minus-square"></i> Minimal Interface</div>
+                        <span class="dropdown-shortcut">Ctrl+H</span>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item">Help
+                <div class="dropdown">
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-question"></i> Help</div>
+                        <span class="dropdown-shortcut">Shift+F1</span>
+                    </div>
+                    <div class="dropdown-item disabled">
+                        <div class="dropdown-item-text"><i class="ph ph-arrows-clockwise"></i> Check for Updates...</div>
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item" onclick="openDialog('about-dialog')">
+                        <div class="dropdown-item-text"><i class="ph ph-info"></i> About</div>
+                        <span class="dropdown-shortcut">F1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="advanced-controls" id="adv-controls">
+            <div class="rec-indicator" id="rec-dot"></div>
+            <button class="vlc-btn" title="Record" id="btn-start-rec" onclick="window.startRecording()">
+                <i class="ph ph-record" style="color:red"></i>
+            </button>
+            <button class="vlc-btn" title="Stop Recording" id="btn-stop-rec" onclick="window.stopRecording()" disabled>
+                <i class="ph ph-stop-circle"></i>
+            </button>
+            <div style="border-left: 1px solid #ccc; height: 15px; margin: 0 5px;"></div>
+            <button class="vlc-btn" title="Voice Control" onclick="window.toggleVoice()">
+                <i class="ph ph-microphone"></i>
+            </button>
+            <span id="voice-status" style="font-size: 0.8rem; color: var(--vlc-accent); display: none; margin-left: 5px;">
+                Listening...
+            </span>
+        </div>
+
+        <div class="main-display-area" id="playlist-drop-zone">
+            
+            <div class="osd-text" id="osd-overlay">Volume: 100%</div>
+
+            <div class="idle-logo" id="idle-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/VLC_icon.png" style="width: 150px; background: transparent; border: none; box-shadow: none; outline: none;" alt="VLC Logo">
+            </div>
+
+            <iframe id="yt-player" frameborder="0" style="display: none; border: none; outline: none;" allow="autoplay" allowfullscreen></iframe>
+            <img src="" class="album-art" id="album-art" alt="Album Art" style="display: none; border: none; outline: none;">
+            <video id="main-player" playsinline style="display: none; border: none; outline: none;" crossorigin="anonymous"></video>
+
+            <div id="fs-control-bar">
+                <div class="fs-progress-row">
+                    <span id="fs-current-time">00:00</span>
+                    <div class="fs-progress-bar-container" id="fs-progress-container">
+                        <div class="fs-progress-fill" id="fs-progress-fill">
+                            <div class="fs-thumb"></div>
+                        </div>
+                    </div>
+                    <span id="fs-duration">00:00</span>
+                </div>
+                <div class="fs-button-bar">
+                    <div class="left-controls">
+                        <button class="vlc-btn play-btn" onclick="togglePlay()" title="Play/Pause (Space)"><i class="ph-fill ph-play" id="fs-play-icon"></i></button>
+                        <button class="vlc-btn" onclick="prevTrack()" title="Previous (P)"><i class="ph-fill ph-skip-back"></i></button>
+                        <button class="vlc-btn" onclick="stopTrack()" title="Stop (S)"><i class="ph-fill ph-stop"></i></button>
+                        <button class="vlc-btn" onclick="nextTrack()" title="Next (N)"><i class="ph-fill ph-skip-forward"></i></button>
+                        <div style="width: 10px;"></div>
+                        <button class="vlc-btn" onclick="toggleFullscreen()" title="Exit Fullscreen (F)"><i class="ph-bold ph-corners-in"></i></button>
+                    </div>
+                    <div class="right-controls">
+                        <button class="vlc-btn" title="Toggle Aspect Ratio (A)" onclick="window.toggleAspectRatio()"><i class="ph-bold ph-arrows-out-line-horizontal"></i></button>
+                        <svg width="18" height="18" viewBox="0 0 24 24" onclick="toggleMute()" title="Mute/Unmute (M)">
+                            <path d="M11 4L5 9H2v6h3l6 5V4z" fill="#777"/>
+                            <g id="fs-vol-waves" stroke="#ff8800" stroke-width="2" stroke-linecap="round" fill="none">
+                                <path id="fs-wave1" d="M14 9c1.5 1.5 1.5 4.5 0 6"/>
+                                <path id="fs-wave2" d="M17 6c3 3 3 9 0 12"/>
+                                <path id="fs-wave3" d="M20 3c4.5 4.5 4.5 13.5 0 18"/>
+                            </g>
+                        </svg>
+                        <div class="vol-slider-wrap" style="width: 80px;" title="Adjust Volume (Scroll Wheel)">
+                            <span class="vol-percent-text" id="fs-vol-percent-label" style="top: -14px;">100%</span>
+                            <svg class="vol-bg-svg" width="80" height="24" viewBox="0 0 100 24" preserveAspectRatio="none" style="position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1;">
+                                <defs>
+                                    <linearGradient id="fs-vol-green" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="#7dfa7d" />
+                                        <stop offset="100%" stop-color="#00c800" />
+                                    </linearGradient>
+                                    <clipPath id="fs-vol-clip">
+                                        <rect x="0" y="0" width="75" height="24" id="fs-vol-fill-clip-rect" />
+                                    </clipPath>
+                                </defs>
+                                <path d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="#e8e8e8" />
+                                <path id="fs-vol-fill-rect" d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="url(#fs-vol-green)" clip-path="url(#fs-vol-clip)"/>
+                                <path d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="none" stroke="#666" stroke-width="1.2" stroke-linejoin="round"/>
+                            </svg>
+                            <input type="range" min="0" max="100" value="75" class="vlc-vol-slider" id="fs-vol-slider" oninput="window.handleSliderChange(this.value)">
+                        </div>
+                        <span id="fs-combined-time">00:00/00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="playlist-view">
+                <div class="playlist-header">
+                    <span>Title</span>
+                    <span>Duration</span>
+                    <span>Album / Folder</span>
+                    <span></span> </div>
+                <div class="playlist-items" id="playlist-list">
+                    </div>
+            </div>
+            
+            <div id="vlc-context-menu" class="context-menu">
+                <div class="context-item" onclick="togglePlay()">
+                    <div class="context-item-text"><i class="ph-fill ph-play" style="color: #666;"></i> Play / Pause</div>
+                </div>
+                <div class="context-item" onclick="stopTrack()">
+                    <div class="context-item-text"><i class="ph-fill ph-stop" style="color: #666;"></i> Stop</div>
+                </div>
+                <div class="context-item" onclick="prevTrack()">
+                    <div class="context-item-text"><i class="ph-fill ph-skip-back" style="color: #666;"></i> Previous</div>
+                </div>
+                <div class="context-item" onclick="nextTrack()">
+                    <div class="context-item-text"><i class="ph-fill ph-skip-forward" style="color: #666;"></i> Next</div>
+                </div>
+                <div class="context-separator"></div>
+                <div class="context-item" onclick="document.getElementById('media-input').click()">
+                    <div class="context-item-text"><i class="ph-fill ph-file-video" style="color: #ff8800;"></i> Open Media...</div>
+                </div>
+                <div class="context-separator"></div>
+                <div class="context-item" onclick="window.takeSnapshot()">
+                    <div class="context-item-text"><i class="ph ph-camera" style="color: #666;"></i> Take Snapshot</div>
+                </div>
+                <div class="context-separator"></div>
+                <div class="context-item" onclick="toggleFullscreen()">
+                    <div class="context-item-text"><i class="ph-bold ph-corners-out" style="color: #666;"></i> Fullscreen</div>
+                </div>
+                
+                <div class="context-item context-nested-parent">
+                    <div class="context-item-text"><i class="ph ph-aspect-ratio" style="color: #666;"></i> Aspect Ratio</div>
+                    <i class="ph ph-caret-right"></i>
+                    <div class="context-nested">
+                        <div class="context-item active-state" onclick="window.setAspectRatio('default')">Default</div>
+                        <div class="context-item" onclick="window.setAspectRatio('16:9')">16:9</div>
+                        <div class="context-item" onclick="window.setAspectRatio('16:10')">16:10</div>
+                        <div class="context-item" onclick="window.setAspectRatio('4:3')">4:3</div>
+                        <div class="context-item" onclick="window.setAspectRatio('1:1')">1:1</div>
+                        <div class="context-item" onclick="window.setAspectRatio('2.35:1')">2.35:1</div>
+                    </div>
+                </div>
+                
+                <div class="context-separator"></div>
+                <div class="context-item" onclick="openDialog('eq-dialog')">
+                    <div class="context-item-text"><i class="ph ph-faders" style="color: #666;"></i> Effects and Filters</div>
+                </div>
+                <div class="context-item" onclick="openDialog('about-dialog')">
+                    <div class="context-item-text"><i class="ph ph-info" style="color: #666;"></i> About</div>
+                </div>
+                <div class="context-separator"></div>
+                <div class="context-item" onclick="window.close()">
+                    <div class="context-item-text"><i class="ph-bold ph-sign-out" style="color: #666;"></i> Quit</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="controls-wrapper">
+            <div class="progress-row">
+                <span id="current-time">--:--</span>
+                <div class="progress-bar-container" id="progress-container">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <span id="duration">--:--</span>
+            </div>
+            
+            <div class="button-bar">
+                
+                <div class="left-controls">
+                    <button class="vlc-btn play-btn" id="play-pause-btn" onclick="togglePlay()" title="Play/Pause (Space)"><i class="ph-fill ph-play"></i></button>
+                    
+                    <div class="btn-group">
+                        <button class="vlc-btn" onclick="prevTrack()" title="Previous (P)"><i class="ph-fill ph-skip-back"></i></button>
+                        <button class="vlc-btn" onclick="stopTrack()" title="Stop (S)"><i class="ph-fill ph-stop"></i></button>
+                        <button class="vlc-btn" onclick="nextTrack()" title="Next (N)"><i class="ph-fill ph-skip-forward"></i></button>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="vlc-btn" onclick="togglePiP()" title="Picture-in-Picture"><i class="ph-bold ph-picture-in-picture"></i></button>
+                        <button class="vlc-btn" onclick="toggleFullscreen()" title="Fullscreen (F)"><i class="ph-bold ph-corners-out"></i></button>
+                        <button class="vlc-btn" onclick="openDialog('eq-dialog')" title="Adjustments and Effects (Ctrl+E)"><i class="ph-bold ph-faders"></i></button>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="vlc-btn" onclick="togglePlaylist()" id="playlist-btn-toggle" title="Toggle Playlist (Ctrl+L)"><i class="ph-bold ph-list-dashes"></i></button>
+                        <button class="vlc-btn" id="loop-btn" onclick="window.toggleLoop()" title="Toggle Loop All"><i class="ph-bold ph-arrows-clockwise"></i></button>
+                        <button class="vlc-btn" id="shuffle-btn" onclick="window.toggleShuffle()" title="Toggle Shuffle"><i class="ph-bold ph-shuffle"></i></button>
+                    </div>
+                </div>
+
+                <div class="right-controls">
+                    <svg id="vol-icon" width="18" height="18" viewBox="0 0 24 24" onclick="toggleMute()" title="Mute/Unmute (M)">
+                        <path d="M11 4L5 9H2v6h3l6 5V4z" fill="#777"/>
+                        <g id="vol-waves" stroke="#ff8800" stroke-width="2" stroke-linecap="round" fill="none">
+                            <path id="wave1" d="M14 9c1.5 1.5 1.5 4.5 0 6"/>
+                            <path id="wave2" d="M17 6c3 3 3 9 0 12"/>
+                            <path id="wave3" d="M20 3c4.5 4.5 4.5 13.5 0 18"/>
+                        </g>
+                    </svg>
+
+                    <div class="vol-slider-wrap" title="Adjust Volume (Scroll Wheel)">
+                        <span class="vol-percent-text" id="vol-percent-label">100%</span>
+                        <svg class="vol-bg-svg" width="100" height="24" viewBox="0 0 100 24" preserveAspectRatio="none" style="position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1;">
+                            <defs>
+                                <linearGradient id="vol-green" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#7dfa7d" />
+                                    <stop offset="100%" stop-color="#00c800" />
+                                </linearGradient>
+                                <clipPath id="vol-clip">
+                                    <rect x="0" y="0" width="75" height="24" id="vol-fill-clip-rect" />
+                                </clipPath>
+                            </defs>
+                            
+                            <path d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="#e8e8e8" />
+                            <path id="vol-fill-rect" d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="url(#vol-green)" clip-path="url(#vol-clip)"/>
+                            <path d="M 5,23 L 95,23 Q 98,23 98,20 L 98,4 Q 98,1 95,1.5 L 3.5,21.5 Q 1.5,23 5,23 Z" fill="none" stroke="#666" stroke-width="1.2" stroke-linejoin="round"/>
+                        </svg>
+                        <input type="range" min="0" max="100" value="75" class="vlc-vol-slider" id="vol-slider" oninput="window.handleSliderChange(this.value)">
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="status-bar" id="status-bar">
+            <span id="sys-log">VLC media player</span>
+            <span id="playlist-count">0/12</span>
+        </div>
+
+        <input type="file" id="media-input" accept="audio/*,video/*" multiple class="file-input">
+        <input type="file" id="art-input" accept="image/*" class="file-input">
+        <input type="file" id="sub-input" accept=".srt" class="file-input">
+        
+        <div id="seek-tooltip" class="seek-tooltip">00:00</div>
+    </div>
+    
+    <div class="dialog-window" id="stream-dialog" style="width: 450px;">
+        <div class="dialog-header">
+            Open Media
+            <button class="dialog-close" onclick="closeDialog('stream-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="dialog-content">
+            <div class="pref-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                <p style="font-weight: bold; font-size: 0.85rem; margin-bottom: 10px;">Network Protocol</p>
+                <p style="font-size: 0.75rem; color: #555; margin-bottom: 5px;">Please enter a network URL (YouTube, MP4, WebM, OGG):</p>
+                <input type="text" id="stream-url-input" style="width: 100%; padding: 5px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 3px;" placeholder="http://...">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                <button class="vlc-btn" onclick="window.submitNetworkStream()" style="width: 80px; padding: 5px;">Play</button>
+                <button class="vlc-btn" onclick="closeDialog('stream-dialog')" style="width: 80px; padding: 5px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-window" id="eq-dialog" style="width: 480px;">
+        <div class="dialog-header">
+            Adjustments and Effects
+            <button class="dialog-close" onclick="closeDialog('eq-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        
+        <div class="dialog-tabs">
+            <button class="tab-btn active" onclick="switchFilterTab('audio-fx-tab', this)">Audio Effects</button>
+            <button class="tab-btn" onclick="switchFilterTab('video-fx-tab', this)">Video Effects</button>
+        </div>
+
+        <div class="dialog-content" style="min-height: 260px; height: auto;">
+            <div id="audio-fx-tab" class="tab-pane active">
+                <p style="font-size: 0.85rem; border-bottom: 1px solid #ccc; padding-bottom: 5px;">10-Band Graphic Equalizer</p>
+                <div class="eq-sliders-container" id="eq-sliders">
+                    </div>
+            </div>
+
+            <div id="video-fx-tab" class="tab-pane">
+                <p style="font-size: 0.85rem; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Basic Image Adjustments</p>
+                
+                <div class="filter-row" style="margin-top: 10px;">
+                    <label>Brightness:</label>
+                    <input type="range" id="vfx-brightness" min="0" max="200" value="100" oninput="window.updateVideoFilters()">
+                </div>
+                <div class="filter-row">
+                    <label>Contrast:</label>
+                    <input type="range" id="vfx-contrast" min="0" max="200" value="100" oninput="window.updateVideoFilters()">
+                </div>
+                <div class="filter-row">
+                    <label>Saturation:</label>
+                    <input type="range" id="vfx-saturation" min="0" max="300" value="100" oninput="window.updateVideoFilters()">
+                </div>
+                <div class="filter-row">
+                    <label>Hue:</label>
+                    <input type="range" id="vfx-hue" min="0" max="360" value="0" oninput="window.updateVideoFilters()">
+                </div>
+                <div class="filter-row">
+                    <label>Sepia:</label>
+                    <input type="range" id="vfx-sepia" min="0" max="100" value="0" oninput="window.updateVideoFilters()">
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button class="vlc-btn" onclick="window.resetVideoFilters()" style="width: 80px; padding: 4px;">Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-window" id="theme-dialog" style="width: 450px;">
+        <div class="dialog-header">
+            Simple Preferences
+            <button class="dialog-close" onclick="closeDialog('theme-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="dialog-content">
+            
+            <div class="pref-section">
+                <div class="pref-row">
+                    <label style="font-weight: bold; width: 150px;">Highlight Color:</label>
+                    <input type="color" id="theme-picker" value="#ff8800">
+                </div>
+            </div>
+
+            <div class="pref-section">
+                <p style="font-weight: bold; font-size: 0.85rem; margin-bottom: 10px;">Privacy / Network Interaction</p>
+                <div class="pref-row"><input type="checkbox" checked id="pref-save"><label>Save recently played items</label></div>
+                <div class="pref-row"><input type="checkbox" checked id="pref-net"><label>Allow metadata network access</label></div>
+            </div>
+
+            <div class="pref-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                <p style="font-weight: bold; font-size: 0.85rem; margin-bottom: 10px;">Playback & Interface</p>
+                <div class="pref-row"><input type="checkbox" id="pref-min"><label>Start in minimal view mode</label></div>
+                <div class="pref-row"><input type="checkbox" id="pref-pause"><label>Pause on the last frame of a video</label></div>
+                
+                <div class="pref-row" style="margin-top: 15px;">
+                    <label style="width: 150px;">Preferred Subtitle Lang:</label>
+                    <select style="padding: 2px 5px; font-size: 0.85rem;">
+                        <option>English</option>
+                        <option>French</option>
+                        <option>Spanish</option>
+                        <option>German</option>
+                        <option>None</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                <button class="vlc-btn" onclick="closeDialog('theme-dialog')" style="width: 80px; padding: 5px;">Save</button>
+                <button class="vlc-btn" onclick="closeDialog('theme-dialog')" style="width: 80px; padding: 5px;">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="dialog-window" id="about-dialog" style="width: 420px;">
+        <div class="dialog-header">
+            About VLC WebApp
+            <button class="dialog-close" onclick="closeDialog('about-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="dialog-content" style="background: white; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 25px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/VLC_icon.png" style="width: 80px; background: transparent; border: none; box-shadow: none; outline: none;" alt="VLC Logo">
+            <h2 style="font-size: 1.2rem; margin: 0;">VLC WebApp</h2>
+            <p style="font-size: 0.85rem; color: #333; line-height: 1.4; margin: 0;">
+                This web application is an open-source homage to the classic VLC media player interface, designed for the modern web browser.
+            </p>
+            <p style="font-size: 0.8rem; color: #666; font-style: italic; margin: 0;">
+                <strong>Disclaimer:</strong> This project is <strong>not</strong> affiliated with VideoLAN or the official VLC media player.
+            </p>
+            <div style="border-top: 1px solid #eee; width: 100%; padding-top: 15px; margin-top: 5px; font-size: 0.85rem; font-weight: bold;">
+                Part of <a href="https://ywa.app" target="_blank" style="color: var(--vlc-accent); text-decoration: none;">ywa.app</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-window" id="rec-dialog">
+        <div class="dialog-header">
+            Recorded Files
+            <button class="dialog-close" onclick="closeDialog('rec-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="dialog-content" id="recordings-list" style="max-height: 200px; overflow-y: auto;">
+            <p style="font-size: 0.8rem; color: #777;" id="no-rec-msg">No recordings yet.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
