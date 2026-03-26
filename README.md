@@ -3,10 +3,11 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![WebAssembly](https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=webassembly&logoColor=white)
 
 A functional clone of VLC media player, built entirely using Vanilla JavaScript, HTML, and CSS. 
 
-This project brings a VLC like experience directly into the web browser, leveraging modern Web APIs to recreate the most iconic features—including the 200% volume booster, dynamic aspect ratio controls, video snapshots, and real-time hardware-accelerated video effects. No frameworks, no external libraries (aside from [Phosphor Icons](https://phosphoricons.com/)), just pure web technologies.
+This project brings a VLC like experience directly into the web browser, leveraging modern Web APIs to recreate the most iconic features—including the 200% volume booster, dynamic aspect ratio controls, video snapshots, real-time hardware-accelerated video effects, and in-browser MKV remuxing via FFmpeg.wasm. No frameworks, no external UI libraries (aside from [Phosphor Icons](https://phosphoricons.com/)), just pure web technologies.
 
 <img width="728" height="556" alt="image" src="https://github.com/user-attachments/assets/752b6b56-88fb-4d34-ad4f-eeb9a04124a8" />
 
@@ -16,13 +17,14 @@ This project brings a VLC like experience directly into the web browser, leverag
 
 ### 🖥️ Authentic Desktop Interface
 * **Native Cursor Override:** The app globally enforces the native desktop arrow cursor (`cursor: default`) to break the "web page" illusion, only allowing text cursors in input fields.
-* **Draggable Modal Windows:** Settings, Effects, and About dialog boxes can be clicked and draged around the viewport.
+* **Draggable Modal Windows:** Settings, Effects, and About dialog boxes can be clicked and dragged around the viewport.
 * **Classic Menu Bar:** The top menu bar mimics native desktop logic. Click a menu to open it, hover over adjacent menus to dynamically switch between them, and click outside to close.
 * **Smart Context Menu:** Right-clicking the video player opens a custom context menu. It features boundary detection, meaning if you right-click near the edge of the screen, the nested menus will dynamically flip to the left to prevent getting cut off.
 * **Fullscreen Auto-Hiding Controls:** When entering Fullscreen mode, a draggable floating control bar appears. It tracks mouse movement and automatically fades out after 4 seconds of inactivity.
 
 ### 🎥 Video Engine
 * **Universal Playback:** Play local `.mp4`, `.webm`, `.ogg` files, paste direct network stream URLs, or paste YouTube video links (which dynamically embed via iframe).
+* **In-Browser MKV Remuxing:** Drop an `.mkv` file into the player, and a custom `FFmpeg.wasm` engine dynamically boots up. It extracts the video and audio streams and remuxes them into a web-friendly `.mp4` container directly in your system's memory without expensive re-encoding. Features a live pop-up modal to monitor the FFmpeg terminal logs!
 * **Live Capture Devices:** Stream directly from your local webcam or connected capture cards (like Elgato) using the `getUserMedia` API.
 * **Dynamic Aspect Ratios:** Force video dimensions to `16:9`, `16:10`, `4:3`, `1:1`, or `2.35:1`. The app bypasses intrinsic CSS limitations by mathematically calculating screen boundaries and stretching pixels via `object-fit: fill`.
 * **Hardware-Accelerated Video FX:** Adjust Brightness, Contrast, Saturation, Hue, and Sepia on the fly using CSS filters. Includes 5 built-in presets (Grayscale, High Contrast, Trippy, etc.). *These effects apply to local videos, YouTube iframes, AND live webcams!*
@@ -74,9 +76,8 @@ This app is heavily mapped for power users.
 Because this app utilizes raw HTML, CSS, and JS, no build steps or `npm` installations are required.
 
 1. Clone or download this repository.
-2. Ensure all three files (`index.html`, `style.css`, `script.js`) are in the same directory.
-3. Open `index.html` in any modern web browser (Chrome, Edge, Firefox, Brave).
-or use at vlc.ywa.app
+2. Ensure all three core files (`index.html`, `style.css`, `script.js`) and the `ffmpeg` folder (containing the WebAssembly files) are in the same directory.
+3. Open `index.html` in any modern web browser (Chrome, Edge, Firefox, Brave) or use at vlc.ywa.app.
 
 **⚠️ Important Note on Web APIs:** Due to modern browser security policies, features like the **Webcam Capture Device** and **Voice Control** *require* a secure context. They will work perfectly if you open the local HTML file directly from your hard drive (`file:///`), or if you host the app on a server that uses **HTTPS**. They will be blocked by the browser if hosted on a standard HTTP connection.
 
