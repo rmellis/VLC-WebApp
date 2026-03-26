@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
+<head>
     <meta charset="UTF-8">
     <title>VLC Clone -Functional [standerd browser codecs]</title>
     <meta name="description" content="A functional browser-based clone of VLC media player built with Vanilla JavaScript, HTML, and CSS. This WebApp atempts to mimic the native desktop environment and features local/network playback, YouTube streaming, 10-band audio EQ, upto 200% volume boost, real-time video FX, live webcam capture, and subtitle support. No frameworks used.">
@@ -16,17 +15,8 @@
     <meta property="og:image:alt" content="A functional browser-based clone of VLC media player built with Vanilla JavaScript, HTML, and CSS. This WebApp atempts to mimic the native desktop environment and features local/network playback, YouTube streaming, 10-band audio EQ, upto 200% volume boost, real-time video FX, live webcam capture, and subtitle support. No frameworks used.">
     <meta name="apple-mobile-web-app-title" content="VLC" />
     <link rel="manifest" href="/site.webmanifest" />
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VLC media player</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -503,7 +493,7 @@
             <span id="playlist-count">0/12</span>
         </div>
 
-        <input type="file" id="media-input" accept="audio/*,video/*" multiple class="file-input">
+        <input type="file" id="media-input" accept="audio/*,video/*,.mkv" multiple class="file-input">
         <input type="file" id="art-input" accept="image/*" class="file-input">
         <input type="file" id="sub-input" accept=".srt" class="file-input">
         
@@ -652,11 +642,17 @@
         </div>
     </div>
 
+    <div class="dialog-window" id="ffmpeg-dialog" style="width: 550px;">
+        <div class="dialog-header">
+            FFmpeg MKV Remuxer
+            <button class="dialog-close" onclick="closeDialog('ffmpeg-dialog')"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="dialog-content">
+            <p style="font-size: 0.85rem; margin-bottom: 5px;">Remuxing MKV to MP4 in-memory...</p>
+            <div id="ffmpeg-log" class="ffmpeg-console"></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
-</html>
-    <script  src="./script.js"></script>
-
-  </body>
-  
 </html>

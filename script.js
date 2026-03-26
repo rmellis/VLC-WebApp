@@ -547,17 +547,170 @@ window.openCaptureDevice = async function() {
     }
 };
 
+// --- FFMPEG MKV REMUXING ENGINE (DYNAMIC LOADING WITH ABSOLUTE URLS) ---
+let ffmpegInstance = null;
+
+window.remuxMKV = async function(file) {
+    openDialog('ffmpeg-dialog');
+    const logWindow = document.getElementById('ffmpeg-log');
+    logWindow.innerHTML = 'Initializing FFmpeg.wasm Engine...\n';
+
+    // 1. Enforce Server Environment (Browsers block Web Workers on local file:// links)
+    if (window.location.protocol === 'file:') {
+        logWindow.innerHTML += '\n[PROTOCOL ERROR]\nYou are running this app directly from your hard drive (file:/// protocol).\n';
+        logWindow.innerHTML += 'Browsers block Web Workers and WebAssembly on local files for security reasons.\n';
+        logWindow.innerHTML += 'Please launch this app using a basic local server (like VS Code Live Server).\n';
+        return;
+    }
+
+    try {
+        // 2. Dynamic Library Injection
+        if (!window.FFmpegWASM && !window.FFmpeg) {
+            logWindow.innerHTML += 'Injecting FFmpeg library...\n';
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = './ffmpeg/ffmpeg.js';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("Failed to load ./ffmpeg/ffmpeg.js. Check file path."));
+                document.head.appendChild(script);
+            });
+            logWindow.innerHTML += 'Library injected successfully.\n\n';
+        }
+
+        // 3. Create ABSOLUTE URLs to prevent Web Worker 404 routing errors
+        // This ensures that when the background worker looks for core files, it doesn't search inside `/ffmpeg/ffmpeg/`
+        const baseURL = new URL('./ffmpeg/', window.location.href).href;
+
+        // 4. Dual API compatibility 
+        if (window.FFmpegWASM) {
+            // ---> v0.12 Logic (Single-Threaded)
+            const { FFmpeg } = window.FFmpegWASM;
+            const fetchFile = (window.FFmpegUtil && window.FFmpegUtil.fetchFile) ? window.FFmpegUtil.fetchFile : async (f) => new Uint8Array(await f.arrayBuffer());
+
+            if (!ffmpegInstance) {
+                ffmpegInstance = new FFmpeg();
+                ffmpegInstance.on('log', ({ message }) => {
+                    logWindow.innerHTML += message + '\n';
+                    logWindow.scrollTop = logWindow.scrollHeight;
+                });
+                
+                logWindow.innerHTML += 'Loading FFmpeg Core...\n';
+                
+                // Pass absolute URLs into the load constructor
+                await ffmpegInstance.load({
+                    coreURL: baseURL + 'ffmpeg-core.js',
+                    wasmURL: baseURL + 'ffmpeg-core.wasm',
+                    workerURL: baseURL + '814.ffmpeg.js',
+                    classWorkerURL: baseURL + '814.ffmpeg.js'
+                });
+            }
+
+            logWindow.innerHTML += `\nWriting ${file.name} to virtual memory...\n`;
+            await ffmpegInstance.writeFile(file.name, await fetchFile(file));
+
+            logWindow.innerHTML += `\nRemuxing ${file.name} to MP4 format (Copying streams)...\n`;
+            await ffmpegInstance.exec(['-i', file.name, '-c', 'copy', 'output.mp4']);
+
+            logWindow.innerHTML += `\nExtracting output file from memory...\n`;
+            const data = await ffmpegInstance.readFile('output.mp4');
+
+            finishRemux(data.buffer, file.name);
+
+            // Free up memory immediately
+            await ffmpegInstance.deleteFile(file.name);
+            await ffmpegInstance.deleteFile('output.mp4');
+
+        } else if (window.FFmpeg) {
+            // ---> v0.11 Logic
+            const { createFFmpeg, fetchFile } = window.FFmpeg;
+
+            if (!ffmpegInstance) {
+                // Pass absolute URLs into the create constructor
+                ffmpegInstance = createFFmpeg({
+                    corePath: baseURL + 'ffmpeg-core.js',
+                    log: true
+                });
+
+                ffmpegInstance.setLogger(({ type, message }) => {
+                    logWindow.innerHTML += message + '\n';
+                    logWindow.scrollTop = logWindow.scrollHeight;
+                });
+                
+                logWindow.innerHTML += 'Loading FFmpeg Core...\n';
+                await ffmpegInstance.load();
+            }
+
+            logWindow.innerHTML += `\nWriting ${file.name} to virtual memory...\n`;
+            ffmpegInstance.FS('writeFile', file.name, await fetchFile(file));
+
+            logWindow.innerHTML += `\nRemuxing ${file.name} to MP4...\n`;
+            await ffmpegInstance.run('-i', file.name, '-c', 'copy', 'output.mp4');
+
+            logWindow.innerHTML += `\nExtracting output file...\n`;
+            const data = ffmpegInstance.FS('readFile', 'output.mp4');
+
+            finishRemux(data.buffer, file.name);
+
+            ffmpegInstance.FS('unlink', file.name);
+            ffmpegInstance.FS('unlink', 'output.mp4');
+
+        } else {
+            throw new Error("FFmpeg library object not found after injection.");
+        }
+
+    } catch (err) {
+        logWindow.innerHTML += `\nERROR: ${err.message}\n`;
+        // Catch actual SharedArrayBuffer failures if they are using an unexpected multi-thread build
+        if (err.message && err.message.includes("SharedArrayBuffer")) {
+            logWindow.innerHTML += '\nLooks like the specific version of FFmpeg you downloaded still strictly demands SharedArrayBuffer. Please use the VS Code Live Server Custom Headers fix.\n';
+        }
+        logSystem(`Remuxing failed: ${err.message}`, "error");
+    }
+};
+
+function finishRemux(buffer, originalName) {
+    const logWindow = document.getElementById('ffmpeg-log');
+    const blob = new Blob([buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    const newName = originalName.replace(/\.mkv$/i, '.mp4');
+
+    playlist.push({
+        file: { name: newName },
+        url: url,
+        duration: '--:--',
+        folder: 'Remuxed Media'
+    });
+
+    logWindow.innerHTML += `\nSuccess! ${newName} added to playlist.\n`;
+    renderPlaylist();
+    logSystem(`Remuxed ${newName} successfully.`);
+
+    setTimeout(() => {
+        closeDialog('ffmpeg-dialog');
+        if (currentTrackIndex === -1 || mainPlayer.paused) loadTrack(playlist.length - 1);
+    }, 2000);
+}
+// ------------------------------------
+
+
 // FILE HANDLING & BLOCKING UNSUPPORTED FORMATS
 function processFiles(fileList) {
     try {
         const files = Array.from(fileList);
-        const blockedExts = ['.mkv', '.avi', '.wmv', '.flv', '.rm', '.vob', '.mts', '.m2ts'];
+        const blockedExts = ['.avi', '.wmv', '.flv', '.rm', '.vob', '.mts', '.m2ts'];
         const allowedAudioVideo = ['.mp4', '.webm', '.ogg', '.mp3', '.wav', '.flac', '.aac', '.m4a'];
         let addedCount = 0;
         let rejectedCount = 0;
 
         files.forEach(file => {
             const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            
+            // Intercept MKV files and pipe them to FFmpeg logic IMMEDIATELY
+            if (ext === '.mkv') {
+                window.remuxMKV(file);
+                return;
+            }
+
             if (blockedExts.includes(ext)) {
                 rejectedCount++;
                 return; 
@@ -580,7 +733,7 @@ function processFiles(fileList) {
             renderPlaylist();
             logSystem(`Added ${addedCount} file(s) to playlist.`);
             if (currentTrackIndex === -1) loadTrack(0);
-        } else if (rejectedCount === 0) {
+        } else if (rejectedCount === 0 && !files.some(f => f.name.toLowerCase().endsWith('.mkv'))) {
             logSystem("No valid media files found.", "error");
         }
     } catch (err) {
@@ -600,11 +753,13 @@ if (dropZone) {
         e.stopPropagation(); 
         dropZone.classList.add('dragover'); 
     });
+    
     dropZone.addEventListener('dragleave', (e) => { 
         e.preventDefault(); 
         e.stopPropagation(); 
         dropZone.classList.remove('dragover'); 
-    });        
+    });
+            
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault(); 
         e.stopPropagation(); 
@@ -671,7 +826,9 @@ function updateSubtitleTrackMenu() {
     const parentHasDisabledClass = subTrackParent.classList.contains('disabled');
 
     let activeIdx = -1;
-    subtitleTracks.forEach((t, i) => { if(t.mode === 'showing') activeIdx = i; });
+    subtitleTracks.forEach((t, i) => { 
+        if(t.mode === 'showing') activeIdx = i; 
+    });
 
     subTrackList.innerHTML = `<div class="dropdown-item ${activeIdx === -1 ? 'active-state' : ''}" onclick="setSubtitleTrack(-1)">Disable</div>`;
 
@@ -989,16 +1146,22 @@ let isShuffle = false;
 window.toggleLoop = function() {
     isLooping = !isLooping;
     const btn = document.getElementById('loop-btn');
-    if(isLooping) btn.classList.add('active-state');
-    else btn.classList.remove('active-state');
+    if(isLooping) {
+        btn.classList.add('active-state');
+    } else {
+        btn.classList.remove('active-state');
+    }
     showOSD(isLooping ? "Loop: On" : "Loop: Off");
 };
 
 window.toggleShuffle = function() {
     isShuffle = !isShuffle;
     const btn = document.getElementById('shuffle-btn');
-    if(isShuffle) btn.classList.add('active-state');
-    else btn.classList.remove('active-state');
+    if(isShuffle) {
+        btn.classList.add('active-state');
+    } else {
+        btn.classList.remove('active-state');
+    }
     showOSD(isShuffle ? "Shuffle: On" : "Shuffle: Off");
 };
 
@@ -1054,11 +1217,15 @@ window.setPlaybackSpeed = function(speed) {
 };
 
 window.increaseSpeed = function() {
-    if (mainPlayer) window.setPlaybackSpeed(Math.min(mainPlayer.playbackRate + 0.25, 4.0));
+    if (mainPlayer) {
+        window.setPlaybackSpeed(Math.min(mainPlayer.playbackRate + 0.25, 4.0));
+    }
 };
 
 window.decreaseSpeed = function() {
-    if (mainPlayer) window.setPlaybackSpeed(Math.max(mainPlayer.playbackRate - 0.25, 0.25));
+    if (mainPlayer) {
+        window.setPlaybackSpeed(Math.max(mainPlayer.playbackRate - 0.25, 0.25));
+    }
 };
 // ----------------------------
 
@@ -1490,29 +1657,92 @@ window.toggleVoice = function() {
 document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
-    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-    else if (e.code === 'KeyS' && !e.shiftKey && !e.ctrlKey) { stopTrack(); }
-    else if (e.code === 'KeyS' && e.shiftKey && !e.ctrlKey) { e.preventDefault(); window.takeSnapshot(); }
-    else if (e.code === 'KeyF') { toggleFullscreen(); }
-    else if (e.code === 'KeyM') { toggleMute(); }
-    else if (e.code === 'KeyP' && !e.ctrlKey) { prevTrack(); }
-    else if (e.code === 'KeyN' && !e.ctrlKey) { nextTrack(); }
-    else if (e.code === 'KeyA' && !e.ctrlKey) { e.preventDefault(); window.toggleAspectRatio(); }
-    else if (e.code === 'KeyV' && !e.ctrlKey) { cycleSubtitles(); }
-    else if (e.code === 'KeyC' && e.ctrlKey) { e.preventDefault(); window.openCaptureDevice(); }
-    else if (e.code === 'F1') { e.preventDefault(); openDialog('about-dialog'); }
-    else if (e.code === 'KeyO' && e.ctrlKey) { e.preventDefault(); document.getElementById('media-input').click(); }
-    else if (e.code === 'KeyE' && e.ctrlKey) { e.preventDefault(); openDialog('eq-dialog'); }
-    else if (e.code === 'KeyL' && e.ctrlKey) { e.preventDefault(); togglePlaylist(); }
-    else if (e.code === 'KeyP' && e.ctrlKey) { e.preventDefault(); openDialog('theme-dialog'); }
-    else if (e.code === 'KeyN' && e.ctrlKey) { e.preventDefault(); window.promptNetworkStream(); }
-    else if (e.code === 'KeyV' && e.ctrlKey) { e.preventDefault(); window.promptNetworkStream(); }
-    else if (e.code === 'ArrowUp') { e.preventDefault(); setVolume(currentVolPercent + 10, true); }
-    else if (e.code === 'ArrowDown') { e.preventDefault(); setVolume(currentVolPercent - 10, true); }
-    else if (e.code === 'ArrowRight') { e.preventDefault(); window.seekVideo(10); }
-    else if (e.code === 'ArrowLeft') { e.preventDefault(); window.seekVideo(-10); }
-    else if (e.code === 'BracketRight' && !e.ctrlKey) { e.preventDefault(); window.increaseSpeed(); }
-    else if (e.code === 'BracketLeft' && !e.ctrlKey) { e.preventDefault(); window.decreaseSpeed(); }
+    if (e.code === 'Space') { 
+        e.preventDefault(); 
+        togglePlay(); 
+    }
+    else if (e.code === 'KeyS' && !e.shiftKey && !e.ctrlKey) { 
+        stopTrack(); 
+    }
+    else if (e.code === 'KeyS' && e.shiftKey && !e.ctrlKey) { 
+        e.preventDefault(); 
+        window.takeSnapshot(); 
+    }
+    else if (e.code === 'KeyF') { 
+        toggleFullscreen(); 
+    }
+    else if (e.code === 'KeyM') { 
+        toggleMute(); 
+    }
+    else if (e.code === 'KeyP' && !e.ctrlKey) { 
+        prevTrack(); 
+    }
+    else if (e.code === 'KeyN' && !e.ctrlKey) { 
+        nextTrack(); 
+    }
+    else if (e.code === 'KeyA' && !e.ctrlKey) { 
+        e.preventDefault(); 
+        window.toggleAspectRatio(); 
+    }
+    else if (e.code === 'KeyV' && !e.ctrlKey) { 
+        cycleSubtitles(); 
+    }
+    else if (e.code === 'KeyC' && e.ctrlKey) { 
+        e.preventDefault(); 
+        window.openCaptureDevice(); 
+    }
+    else if (e.code === 'F1') { 
+        e.preventDefault(); 
+        openDialog('about-dialog'); 
+    }
+    else if (e.code === 'KeyO' && e.ctrlKey) { 
+        e.preventDefault(); 
+        document.getElementById('media-input').click(); 
+    }
+    else if (e.code === 'KeyE' && e.ctrlKey) { 
+        e.preventDefault(); 
+        openDialog('eq-dialog'); 
+    }
+    else if (e.code === 'KeyL' && e.ctrlKey) { 
+        e.preventDefault(); 
+        togglePlaylist(); 
+    }
+    else if (e.code === 'KeyP' && e.ctrlKey) { 
+        e.preventDefault(); 
+        openDialog('theme-dialog'); 
+    }
+    else if (e.code === 'KeyN' && e.ctrlKey) { 
+        e.preventDefault(); 
+        window.promptNetworkStream(); 
+    }
+    else if (e.code === 'KeyV' && e.ctrlKey) { 
+        e.preventDefault(); 
+        window.promptNetworkStream(); 
+    }
+    else if (e.code === 'ArrowUp') { 
+        e.preventDefault(); 
+        setVolume(currentVolPercent + 10, true); 
+    }
+    else if (e.code === 'ArrowDown') { 
+        e.preventDefault(); 
+        setVolume(currentVolPercent - 10, true); 
+    }
+    else if (e.code === 'ArrowRight') { 
+        e.preventDefault(); 
+        window.seekVideo(10); 
+    }
+    else if (e.code === 'ArrowLeft') { 
+        e.preventDefault(); 
+        window.seekVideo(-10); 
+    }
+    else if (e.code === 'BracketRight' && !e.ctrlKey) { 
+        e.preventDefault(); 
+        window.increaseSpeed(); 
+    }
+    else if (e.code === 'BracketLeft' && !e.ctrlKey) { 
+        e.preventDefault(); 
+        window.decreaseSpeed(); 
+    }
 });
 
 // INIT VOLUME PRESET
